@@ -106,7 +106,7 @@ class TuiBotter
 	 * @access public
 	 * @param  object $bh behaviour object
 	 */
-	public function applyBehaviour($bh)
+	public function applyBehaviour(&$bh)
 	{
 		$this->_bh[] = $bh;
 	}
@@ -209,9 +209,9 @@ class TuiBotter
 	{
 		$en = "TuiBotter_Event_{$eventName}";
 		$ret = array();
-		foreach($this->_bh as $bh){
+		foreach($this->_bh as $inx => $bh){
 			if($bh instanceof $en){
-				$ret[] = &$bh;
+				$ret[] = &$this->_bh[$inx];
 			}
 		}
 		return $ret;
