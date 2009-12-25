@@ -8,3 +8,5 @@ cacheDir = /path/to/cache/
 
 cacheHttp = true
 cacheHttpDir = /path/to/http_cache/
+
+[Behaviours]

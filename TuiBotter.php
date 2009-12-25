@@ -57,11 +57,13 @@ class TuiBotter
 	public function __construct($config)
 	{
 		if(!class_exists('Tuitter'))
-			self::load('../Tuitter/Tuitter.php');
+			@require_once('Tuitter.php');
 		self::load('Events.php');
 
 		$config_file = realpath($config);
 		if(file_exists($config_file)){
+			if(!defined('TUIBOTTER_CONF_DIR'))
+				define('TUIBOTTER_CONF_DIR', dirname($config_file));
 			$this->_config = parse_ini_file($config_file, true);
 		}else{
 			throw new Exception('Config file "'.$config_file.'" does not exists.');
@@ -74,16 +76,23 @@ class TuiBotter
 
 		if($env = $this->_config['Environment']){
 			if($env['cache']){
-				if($cacheDir = $env['cacheDir']){
+				if($cacheDir = ($env['cacheDir'])){
 					Tuitter::load('Cache/File.php');
 					$this->_tuitter->setCache(new Tuitter_Cache_File($cacheDir));
 				}
 			}
 			if($env['cacheHttp']){
-				if($cacheDir = $env['cacheHttpDir']){
+				if($cacheDir = ($env['cacheHttpDir'])){
 					Tuitter::load('Cache/File.php');
 					$this->_tuitter->setHttpCache(new Tuitter_Cache_File($cacheDir));
 				}
+			}
+		}
+
+		if($bhs = $this->_config['Behaviours']){
+			foreach($bhs as $class => $class_file){
+				require_once($class_file);
+				self::applyBehaviour(new $class());
 			}
 		}
 	}
@@ -120,6 +129,7 @@ class TuiBotter
 	public function heartbeat()
 	{
 		$this->checkFollowers();
+		$this->checkHomeTL();
 		$this->checkFriendsTL();
 		$this->checkMentions();
 		$this->checkReplies();
@@ -130,9 +140,19 @@ class TuiBotter
 	 *
 	 * @access public
 	 */
+	public function checkHomeTL()
+	{
+		$this->_check('UpdatedHomeTL', 'eventUpdatedHomeTL', 'getHomeTL', array('count'=>200));
+	}
+
+	/**
+	 * Checks friends' timeline and push behaviour objects' method.
+	 *
+	 * @access public
+	 */
 	public function checkFriendsTL()
 	{
-		$this->_checkTweets('UpdatedFriendsTL', 'eventUpdatedFriendsTL', 'getFriendsTL');
+		$this->_check('UpdatedFriendsTL', 'eventUpdatedFriendsTL', 'getFriendsTL', array('count'=>200));
 	}
 
 	/**
@@ -142,7 +162,7 @@ class TuiBotter
 	 */
 	public function checkMentions()
 	{
-		$this->_checkTweets('Mentioned', 'eventMentioned', 'getMentions');
+		$this->_check('BeMentioned', 'eventBeMentioned', 'getMentions', array('count'=>200));
 	}
 
 	/**
@@ -153,7 +173,27 @@ class TuiBotter
 	 */
 	public function checkReplies()
 	{
-		$this->_checkTweets('Replied', 'eventReplied', 'getReplies');
+		$this->_check('BeReplied', 'eventBeReplied', 'getReplies', array('count'=>200));
+	}
+
+	public function checkRTofMe()
+	{
+		$this->_check('BeRetweeted', 'eventBeRetweeted', 'getRTofMe', array('count'=>200));
+	}
+
+	public function checkRTbyMe()
+	{
+		$this->_check('Retweeted', 'eventRetweeted', 'getRTbyMe', array('count'=>200));
+	}
+
+	public function checkRTtoMe()
+	{
+		$this->_check('RetweetedToMe', 'eventRetweetedToMe', 'getRTtoMe', array('count'=>200));
+	}
+
+	public function checkFavorites()
+	{
+		$this->_check('FavoriteMarked', 'eventFavoriteMarked', 'getFavorites');
 	}
 
 	/**
@@ -163,36 +203,28 @@ class TuiBotter
 	 */
 	public function checkFollowers()
 	{
-		$ifName = 'Followed';
-		$applyer = 'eventFollowed';
-		$getter = 'getFollowers';
-		if($bhs = $this->_getBehaviours($ifName)){
-			$users = $this->_tuitter->$getter();
-			$users->reverse();
-			foreach($users as $user){
-				foreach($bhs as $bh){
-					$bh->$applyer($user, $this->_tuitter);
-				}
-			}
-		}
+		$this->_check('BeFollowed', 'eventBeFollowed', 'getFollowers');
 	}
 
-	/**
-	 * Takes care about incremental checking process.
-	 *
-	 * @access private
-	 * @param  string $ifName name of interface
-	 * @param  string $applyer name of behaviours method
-	 * @param  string $getter name of tuitter object's method
-	 */
-	private function _checkTweets($ifName, $applyer, $getter)
+	public function checkDMs()
+	{
+		$this->_check('GotDM', 'eventGotDM', 'getDMs', array('count'=>200));
+	}
+
+	public function checkSentDMs()
+	{
+		$this->_check('SentDM', 'eventSentDM', 'getSentDMs', array('count'=>200));
+	}
+
+	private function _check($ifName, $applyer, $getter, $opt=array())
 	{
 		if($bhs = $this->_getBehaviours($ifName)){
-			$tweets = $this->_tuitter->$getter(array('count'=>200));
-			$tweets->reverse();
-			foreach($tweets as $tweet){
+			$sths = $this->_tuitter->$getter($opt, 'tuibotter-default');
+			$sths->reverse();
+			foreach($sths as $sth){
 				foreach($bhs as $bh){
-					$bh->$applyer($tweet, $this->_tuitter);
+					$ret = $bh->$applyer($sth, $this->_tuitter);
+					if($ret === false) break;
 				}
 			}
 		}
