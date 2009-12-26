@@ -1,6 +1,5 @@
-PHP Framework for twitter bot.
+TuiBotter
+Object-oriented PHP framework for Twitter-Bot
 
-This is alpha version.
-More information is coming later.
-
-Just you can see how it works in HeartBeat.php.sample.
+Documentation:
+	http://dev.screw-axis.com/doc/tuibotter/

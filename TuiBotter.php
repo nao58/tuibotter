@@ -133,6 +133,12 @@ class TuiBotter
 		$this->checkFriendsTL();
 		$this->checkMentions();
 		$this->checkReplies();
+		$this->checkRTofMe();
+		$this->checkRTbyMe();
+		$this->checkRTtoMe();
+		$this->checkFavorites();
+		$this->checkDMs();
+		$this->checkSentDMs();
 	}
 
 	/**
@@ -224,7 +230,6 @@ class TuiBotter
 			foreach($sths as $sth){
 				foreach($bhs as $bh){
 					$ret = $bh->$applyer($sth, $this->_tuitter);
-					if($ret === false) break;
 				}
 			}
 		}

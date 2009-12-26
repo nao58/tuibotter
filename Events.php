@@ -67,3 +67,8 @@ interface TuiBotter_Event_GotDM
 {
 	public function eventGotDM(Tuitter_DM $dm, Tuitter $tuitter);
 }
+
+interface TuiBotter_Event_SentDM
+{
+	public function eventSentDM(Tuitter_DM $dm, Tuitter $tuitter);
+}
