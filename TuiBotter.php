@@ -89,7 +89,7 @@ class TuiBotter
 			}
 		}
 
-		if($bhs = $this->_config['Behaviours']){
+		if(isset($this->_config['Behaviours']) and $bhs = $this->_config['Behaviours']){
 			foreach($bhs as $class => $class_file){
 				require_once($class_file);
 				self::applyBehaviour(new $class());
@@ -128,6 +128,7 @@ class TuiBotter
 	 */
 	public function heartbeat()
 	{
+		$this->_call('initialize');
 		$this->checkFollowers();
 		$this->checkHomeTL();
 		$this->checkFriendsTL();
@@ -139,6 +140,7 @@ class TuiBotter
 		$this->checkFavorites();
 		$this->checkDMs();
 		$this->checkSentDMs();
+		$this->_call('finalize');
 	}
 
 	/**
@@ -231,6 +233,15 @@ class TuiBotter
 				foreach($bhs as $bh){
 					$ret = $bh->$applyer($sth, $this->_tuitter);
 				}
+			}
+		}
+	}
+
+	private function _call($method)
+	{
+		foreach($this->_bh as $inx => $bh){
+			if(method_exists($this->_bh[$inx], $method)){
+				$this->_bh[$inx]->$method();
 			}
 		}
 	}
