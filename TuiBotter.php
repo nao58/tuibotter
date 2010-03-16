@@ -249,7 +249,7 @@ class TuiBotter
 	{
 		foreach($this->_bh as $inx => $bh){
 			if(method_exists($this->_bh[$inx], $method)){
-				$this->_bh[$inx]->$method();
+				$this->_bh[$inx]->$method($this->_tuitter);
 			}
 		}
 	}
