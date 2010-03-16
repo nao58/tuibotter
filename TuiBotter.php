@@ -70,9 +70,17 @@ class TuiBotter
 		}
 
 		$account = $this->_config['Account'];
-		$user = $account['user'];
-		$pass = $account['pass'];
-		$this->_tuitter = new Tuitter($user, $pass);
+		$authType = (isset($account['authType']) ? $account['authType'] : 'Basic');
+		if($authType=='Basic'){
+			$user = $account['user'];
+			$pass = $account['pass'];
+			$this->_tuitter = new Tuitter($user, $pass);
+		}else if($authType=='OAuth'){
+			if(!class_exists('TuitterOAuth')) require_once('TuitterOAuth');
+			$this->_tuitter = new TuitterOAuth(
+				$account['consumerKey'], $account['consumerSec'],
+				$account['accessKey'], $account['accessSec']);
+		}
 
 		if($env = $this->_config['Environment']){
 			if($env['cache']){
@@ -150,7 +158,7 @@ class TuiBotter
 	 */
 	public function checkHomeTL()
 	{
-		$this->_check('UpdatedHomeTL', 'eventUpdatedHomeTL', 'getHomeTL', array('count'=>200));
+		$this->_check('UpdatedHomeTL', 'eventUpdatedHomeTL', 'getHomeTL', array('count'=>'200'));
 	}
 
 	/**
@@ -160,7 +168,7 @@ class TuiBotter
 	 */
 	public function checkFriendsTL()
 	{
-		$this->_check('UpdatedFriendsTL', 'eventUpdatedFriendsTL', 'getFriendsTL', array('count'=>200));
+		$this->_check('UpdatedFriendsTL', 'eventUpdatedFriendsTL', 'getFriendsTL', array('count'=>'200'));
 	}
 
 	/**
@@ -170,7 +178,7 @@ class TuiBotter
 	 */
 	public function checkMentions()
 	{
-		$this->_check('BeMentioned', 'eventBeMentioned', 'getMentions', array('count'=>200));
+		$this->_check('BeMentioned', 'eventBeMentioned', 'getMentions', array('count'=>'200'));
 	}
 
 	/**
@@ -181,22 +189,22 @@ class TuiBotter
 	 */
 	public function checkReplies()
 	{
-		$this->_check('BeReplied', 'eventBeReplied', 'getReplies', array('count'=>200));
+		$this->_check('BeReplied', 'eventBeReplied', 'getReplies', array('count'=>'200'));
 	}
 
 	public function checkRTofMe()
 	{
-		$this->_check('BeRetweeted', 'eventBeRetweeted', 'getRTofMe', array('count'=>200));
+		$this->_check('BeRetweeted', 'eventBeRetweeted', 'getRTofMe', array('count'=>'200'));
 	}
 
 	public function checkRTbyMe()
 	{
-		$this->_check('Retweeted', 'eventRetweeted', 'getRTbyMe', array('count'=>200));
+		$this->_check('Retweeted', 'eventRetweeted', 'getRTbyMe', array('count'=>'200'));
 	}
 
 	public function checkRTtoMe()
 	{
-		$this->_check('RetweetedToMe', 'eventRetweetedToMe', 'getRTtoMe', array('count'=>200));
+		$this->_check('RetweetedToMe', 'eventRetweetedToMe', 'getRTtoMe', array('count'=>'200'));
 	}
 
 	public function checkFavorites()
@@ -216,12 +224,12 @@ class TuiBotter
 
 	public function checkDMs()
 	{
-		$this->_check('GotDM', 'eventGotDM', 'getDMs', array('count'=>200));
+		$this->_check('GotDM', 'eventGotDM', 'getDMs', array('count'=>'200'));
 	}
 
 	public function checkSentDMs()
 	{
-		$this->_check('SentDM', 'eventSentDM', 'getSentDMs', array('count'=>200));
+		$this->_check('SentDM', 'eventSentDM', 'getSentDMs', array('count'=>'200'));
 	}
 
 	private function _check($ifName, $applyer, $getter, $opt=array())
